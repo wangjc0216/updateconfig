@@ -1,0 +1,36 @@
+#注意：MSPDir就是配置MSP的路径
+
+---
+################################################################################
+#
+#   Section: Organizations
+#
+#   - This section defines the different organizational identities which will
+#   be referenced later in the configuration.
+#
+################################################################################
+Organizations:
+  - &Crosshub
+    # DefaultOrg defines the organization which is used in the sampleconfig
+    # of the fabric.git development environment
+    Name: CrosshubMSP
+
+    # ID to load the MSP definition as
+    ID: CrosshubMSP
+
+    MSPDir: ./crosshubmsp
+#    MSPDir: ./crypto-config/peerOrganizations/org3.example.com/msp
+    # Policies defines the set of policies at this level of the config tree
+    # For organization policies, their canonical path is usually
+    #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+#    Policies:
+#      Readers:
+#        Type: Signature
+#        Rule: "OR('CrosshubMSP.admin', 'CrosshubMSP.peer', 'CrosshubMSP.client')"
+#      Writers:
+#        Type: Signature
+#        Rule: "OR('CrosshubMSP.admin', 'CrosshubMSP.client')"
+#      Admins:
+#        Type: Signature
+#        Rule: "OR('CrosshubMSP.admin')"
+
