@@ -1,38 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"github.com/wangjc/updateconfig/group"
 	"testing"
 )
 
-func TestGenerateCfgStr(t *testing.T) {
-	str, group, err := GenerateCfgStr(txconfigPath)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	fmt.Println(str)
-	fmt.Println(group)
-}
-
-func init() {
-}
-
-//txconfigPath = "./configtxdir/"
-//org1CfgPath  = "./sdkconfig/org1sdk-config.yaml"
-//org2CfgPath  = "./sdkconfig/org2sdk-config.yaml"
-//org1Name     = "Org1"
-//org2Name     = "Org2"
-//orgAdmin     = "Admin"
-//channelID    = "mychannel"
 var (
-	crossName = "CrosshubMSP"
-	txpath    = "./configtxdir/"
-	MyChannel = "mychannel"
+	txpath      = "./configtxdir/"
+	MyChannel   = "mychannel"
+	org1CfgPath = "./sdkconfig/org1sdk-config.yaml"
+	org2CfgPath = "./sdkconfig/org2sdk-config.yaml"
+	org1Name    = "Org1"
+	org2Name    = "Org2"
+	crossName   = "CrosshubMSP"
 )
 
-func TestGetLastestBlock(t *testing.T) {
+//应用通道增加组织
+func TestADDORG(t *testing.T) {
 	crossG, err := group.NewCfgGroup(crossName, group.WithTxPath(txpath))
 	if err != nil {
 		t.Fatal(err)
