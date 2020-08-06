@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/resource"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
@@ -172,9 +171,9 @@ func main() {
 	//cfgUpdateEnv.Signatures = append(cfgUpdateEnv.Signatures, sdk1Sig, sdk2Sig)
 
 	saveReq := resmgmt.SaveChannelRequest{
-		ChannelID:         channelID,
-		ChannelConfig:     bytes.NewBuffer(envelopProto),     // 是envelop的反序列化
-		SigningIdentities: []msp.SigningIdentity{ctx1, ctx2}, //需要在MSP中增加identity
+		ChannelID:     channelID,
+		ChannelConfig: bytes.NewBuffer(envelopProto), // 是envelop的反序列化
+		//SigningIdentities: []msp.SigningIdentity{ctx1, ctx2}, //需要在MSP中增加identity
 	}
 
 	saveResp, err := rc1.SaveChannel(saveReq, resmgmt.WithConfigSignatures(sdk1Sig, sdk2Sig))
@@ -188,14 +187,12 @@ func main() {
 
 //2.获取最新配置块
 func GetLastestBlock(sdk *fabsdk.FabricSDK, orgName, orgAdmin, channelID string) (*common.Config, error) {
-
 	rcp := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
 	rc, err := resmgmt.New(rcp)
 	if err != nil {
 		log.Panicf("failed to create resource client: %s", err)
 	}
 	log.Println("Initialized resource client")
-
 	originalConfigBlock, err := rc.QueryConfigBlockFromOrderer(channelID)
 	if err != nil {
 		log.Println("rc queryconfigblock err: ", err)
@@ -207,5 +204,4 @@ func GetLastestBlock(sdk *fabsdk.FabricSDK, orgName, orgAdmin, channelID string)
 		return nil, err
 	}
 	return originalConfig, nil
-
 }
