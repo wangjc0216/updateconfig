@@ -76,11 +76,12 @@ func WithTxPath(path string) func(*Org) {
 }
 func WithUserType(user string) func(*Org) {
 	return func(g *Org) {
-		if user != "admin" && user != "peer" && user != "client" {
-			g.user = "admin"
-		} else {
-			g.user = user
-		}
+		//if user != "admin" && user != "peer" && user != "client" {
+		//	g.user = "admin"
+		//} else {
+		log.Println(" set user is ...", user)
+		g.user = user
+		//}
 	}
 }
 func WithSDKPath(path string) func(*Org) {
