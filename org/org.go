@@ -1,4 +1,4 @@
-package group
+package org
 
 import (
 	"bytes"
@@ -18,35 +18,15 @@ import (
 	"os"
 )
 
-type Client struct {
+type client struct {
 	sdk *fabsdk.FabricSDK
-	ctx fab.ClientContext //Client supplies the configuration and signing identity to client objects
+	ctx fab.ClientContext //client supplies the configuration and signing identity to client objects
 	rcp context.ClientProvider
 	rc  *resmgmt.Client
-	g   *Group
+	g   *Org
 }
 
-//func (c *Client) newFabricSDK(cfgPath string) (err error) {
-//	c.sdk, err = fabsdk.New(config.FromFile(cfgPath))
-//	if err != nil {
-//		log.Println("failed to create fabric sdk: ", err)
-//		return
-//	}
-//	c.rcp = c.sdk.Context(fabsdk.WithUser(c.g.User), fabsdk.WithOrg(c.g.OrgName))
-//	c.ctx, err = c.rcp()
-//	if err != nil {
-//		log.Println("c.ctx err", err)
-//		return
-//	}
-//	c.rc, err = resmgmt.New(c.rcp)
-//	if err != nil {
-//		log.Println("resgment new rcp err")
-//		return
-//	}
-//	return
-//}
-
-func (c *Client) queryBlockFromOrderer(channelid string) (*common.Block, error) {
+func (c *client) queryBlockFromOrderer(channelid string) (*common.Block, error) {
 	originalConfigBlock, err := c.rc.QueryConfigBlockFromOrderer(channelid)
 	if err != nil {
 		log.Println("rc queryconfigblock err: ", err)
@@ -55,17 +35,17 @@ func (c *Client) queryBlockFromOrderer(channelid string) (*common.Block, error) 
 	return originalConfigBlock, nil
 }
 
-type Group struct {
-	TxPath  string //configtx.yaml所在路径
-	SdkPath string //sdk的配置文件路径
-	OrgName string
-	User    string //amdin,client,peer
+type Org struct {
+	txPath  string //configtx.yaml所在路径
+	sdkPath string //sdk的配置文件路径
+	orgName string
+	user    string //amdin,client,peer
 	//CfgGroup *common.ConfigGroup
-	*Client
+	*client
 }
 
-func (g *Group) newClient(cfgPath string) (*Client, error) {
-	c := new(Client)
+func (g *Org) newClient(cfgPath string) (*client, error) {
+	c := new(client)
 	c.g = g
 	var err error
 	c.sdk, err = fabsdk.New(config.FromFile(cfgPath))
@@ -73,7 +53,7 @@ func (g *Group) newClient(cfgPath string) (*Client, error) {
 		log.Println("failed to create fabric sdk: ", err)
 		return nil, err
 	}
-	c.rcp = c.sdk.Context(fabsdk.WithUser(c.g.User), fabsdk.WithOrg(c.g.OrgName))
+	c.rcp = c.sdk.Context(fabsdk.WithUser(c.g.user), fabsdk.WithOrg(c.g.orgName))
 	c.ctx, err = c.rcp()
 	if err != nil {
 		log.Println("c.ctx err", err)
@@ -87,42 +67,42 @@ func (g *Group) newClient(cfgPath string) (*Client, error) {
 	return c, nil
 }
 
-type GroupOptions func(*Group)
+type GroupOptions func(*Org)
 
-func WithTxPath(path string) func(*Group) {
-	return func(g *Group) {
-		g.TxPath = path
+func WithTxPath(path string) func(*Org) {
+	return func(g *Org) {
+		g.txPath = path
 	}
 }
-func WithUserType(user string) func(*Group) {
-	return func(g *Group) {
+func WithUserType(user string) func(*Org) {
+	return func(g *Org) {
 		if user != "admin" && user != "peer" && user != "client" {
-			g.User = "admin"
+			g.user = "admin"
 		} else {
-			g.User = user
+			g.user = user
 		}
 	}
 }
-func WithSDKPath(path string) func(*Group) {
-	return func(g *Group) {
-		g.SdkPath = path
+func WithSDKPath(path string) func(*Org) {
+	return func(g *Org) {
+		g.sdkPath = path
 	}
 }
-func NewCfgGroup(orgName string, opts ...GroupOptions) (*Group, error) {
+func NewCfgGroup(orgName string, opts ...GroupOptions) (*Org, error) {
 	var err error
-	g := &Group{
-		TxPath:  "./configtxdir/",
-		OrgName: orgName, //"CrosshubMSP",
-		User:    "admin",
-		//Client:  new(Client), //todo 初始化的方式好吗
+	g := &Org{
+		txPath:  "./configtxdir/",
+		orgName: orgName, //"CrosshubMSP",
+		user:    "admin",
+		//client:  new(client), //todo 初始化的方式好吗
 	}
 	for _, opt := range opts {
 		opt(g)
 	}
-	_, err = os.Stat(g.SdkPath)
+	_, err = os.Stat(g.sdkPath)
 	//
 	if err == nil {
-		g.Client, err = g.newClient(g.SdkPath)
+		g.client, err = g.newClient(g.sdkPath)
 		if err != nil {
 			return nil, err
 		}
@@ -131,16 +111,16 @@ func NewCfgGroup(orgName string, opts ...GroupOptions) (*Group, error) {
 }
 
 //从config.tx文件实例化configGroup对象
-func (g *Group) GenCfgGroupFromTx() (*common.ConfigGroup, error) {
-	if g.TxPath == "" {
+func (g *Org) GenCfgGroupFromTx() (*common.ConfigGroup, error) {
+	if g.txPath == "" {
 		return nil, errors.New("txpath shoud not be empty")
 	}
 	var cfgG *common.ConfigGroup
 	var topLevelConfig *genesisconfig.TopLevel
-	topLevelConfig = genesisconfig.LoadTopLevel(g.TxPath)
+	topLevelConfig = genesisconfig.LoadTopLevel(g.txPath)
 	var err error
 	for _, org := range topLevelConfig.Organizations {
-		if org.Name == g.OrgName {
+		if org.Name == g.orgName {
 			cfgG, err = encoder.NewConsortiumOrgGroup(org)
 			if err != nil {
 				log.Println("bad org definition for org :", err)
@@ -151,8 +131,8 @@ func (g *Group) GenCfgGroupFromTx() (*common.ConfigGroup, error) {
 	}
 	return nil, errors.New("org gen ConfigGroup fail")
 }
-func (g *Group) GetChannelConfig(channelid string) (*common.Config, error) {
-	block, err := g.Client.queryBlockFromOrderer(channelid)
+func (g *Org) GetChannelConfig(channelid string) (*common.Config, error) {
+	block, err := g.client.queryBlockFromOrderer(channelid)
 	if err != nil {
 		return nil, err
 	}
@@ -163,10 +143,10 @@ func (g *Group) GetChannelConfig(channelid string) (*common.Config, error) {
 	}
 	return config, nil
 }
-func (g *Group) CreateConfigSignature(envelop []byte) (*common.ConfigSignature, error) {
+func (g *Org) CreateConfigSignature(envelop []byte) (*common.ConfigSignature, error) {
 	return g.rc.CreateConfigSignatureFromReader(g.ctx, bytes.NewReader(envelop))
 }
-func (g *Group) SaveChannel(channelid string, channelCfg []byte, sigs ...*common.ConfigSignature) error {
+func (g *Org) SaveChannel(channelid string, channelCfg []byte, sigs ...*common.ConfigSignature) error {
 	resp, err := g.rc.SaveChannel(resmgmt.SaveChannelRequest{
 		ChannelID:     channelid,
 		ChannelConfig: bytes.NewBuffer(channelCfg)}, resmgmt.WithConfigSignatures(sigs...))

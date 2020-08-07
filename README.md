@@ -37,4 +37,6 @@ main.init()
 5.在这个网络中我们得到org1和org2的签名sig1和sig2，将Envelope和这两个签名通过Org1或者Org2发起更新通道配置交易即可更新成功。
 
 
+## 本地使用
 
+本demo基于byfn开发，运行程序前先启动byfn网络，同时将sdkconfig目录下sdk配置文件具体证书目录进行修改，与本地一致。

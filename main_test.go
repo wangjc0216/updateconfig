@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/wangjc/updateconfig/group"
+	"github.com/wangjc/updateconfig/org"
 	"testing"
 )
 
@@ -17,11 +17,11 @@ var (
 
 //应用通道增加组织
 func TestADDORG(t *testing.T) {
-	crossG, err := group.NewCfgGroup(crossName, group.WithTxPath(txpath))
+	crossG, err := org.NewCfgGroup(crossName, org.WithTxPath(txpath))
 	if err != nil {
 		t.Fatal(err)
 	}
-	org1G, err := group.NewCfgGroup(org1Name, group.WithSDKPath(org1CfgPath))
+	org1G, err := org.NewCfgGroup(org1Name, org.WithSDKPath(org1CfgPath))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,11 +39,11 @@ func TestADDORG(t *testing.T) {
 	}
 	latestedCfg2.ChannelGroup.Groups["Application"].Groups["CrosshubMSP"] = crossCfgGroup
 
-	cfgUpdate, err := group.GetCompute(latestedCfg1, latestedCfg2, MyChannel)
+	cfgUpdate, err := org.GetCompute(latestedCfg1, latestedCfg2, MyChannel)
 	if err != nil {
 		t.Fatal(err)
 	}
-	envBytes, err := group.AssembleEnvelop(cfgUpdate, MyChannel)
+	envBytes, err := org.AssembleEnvelop(cfgUpdate, MyChannel)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func TestADDORG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	org2G, err := group.NewCfgGroup(org2Name, group.WithSDKPath(org2CfgPath))
+	org2G, err := org.NewCfgGroup(org2Name, org.WithSDKPath(org2CfgPath))
 	if err != nil {
 		t.Fatal(err)
 	}
