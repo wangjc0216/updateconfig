@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/wangjc/updateconfig/org"
 	"testing"
 )
@@ -18,7 +19,7 @@ var (
 //应用通道增加组织
 func TestADDORG(t *testing.T) {
 	//实例化"第三家"组织，传入交易的路径
-	crossG, err := org.NewCfgGroup(crossName, org.WithTxPath(txpath))
+	crossG, err := org.NewCfgGroup(crossName, org.WithTxPath(txpath), org.WithUserType("Admin"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,4 +72,60 @@ func TestADDORG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+//Mychannel通道删除Org2
+func TestDeleteORG(t *testing.T) {
+	//实例化Org1
+	org1G, err := org.NewCfgGroup(org1Name, org.WithSDKPath(org1CfgPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	//获取mychannel中最新配置
+	latestedCfg1, err := org1G.GetChannelConfig(MyChannel)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	latestedCfg2, err := org1G.GetChannelConfig(MyChannel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	//将Org2的配置删除
+	delete(latestedCfg2.ChannelGroup.Groups["Application"].Groups, "Org2MSP")
+	//通过比对，获取更新配置块
+	cfgUpdate, err := org.GetCompute(latestedCfg1, latestedCfg2, MyChannel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	//组装成信封
+	envBytes, err := org.AssembleEnvelop(cfgUpdate, MyChannel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	//Org1,Org2 为最新通道配置签名
+	sig1, err := org1G.CreateConfigSignature(envBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	org2G, err := org.NewCfgGroup(org2Name, org.WithSDKPath(org2CfgPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sig2, err := org2G.CreateConfigSignature(envBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	//两个签名传给Org1，由Org1来发起更新通道配置的交易
+	err = org1G.SaveChannel(MyChannel, envBytes, sig1, sig2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	//获取删除Org2后的配置块（当前仅剩下Org1）
+	latestedCfg3, err := org1G.GetChannelConfig(MyChannel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(latestedCfg3)
+
 }
